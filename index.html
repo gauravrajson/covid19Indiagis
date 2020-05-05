@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Corona India</title>
+        <link rel="stylesheet" href="src/leaflet.css">
+        <link rel="stylesheet" href="src/css/bootstrap.css">
+        
+        <link rel="stylesheet" href="src/plugins/L.Control.MousePosition.css">
+        <link rel="stylesheet" href="src/plugins/L.Control.Sidebar.css">
+        <link rel="stylesheet" href="src/plugins/Leaflet.PolylineMeasure.css">
+        <link rel="stylesheet" href="src/plugins/easy-button.css">
+        <link rel="stylesheet" href="src/plugins/leaflet-styleeditor/css/Leaflet.StyleEditor.css">
+        <link rel="stylesheet" href="src/css/font-awesome.min.css">
+        <link rel="stylesheet" href="src/plugins/leaflet.awesome-markers.css">
+        <link rel="stylesheet" href="src/plugins/leaflet-mapkey/MapkeyIcons.css">
+        <link rel="stylesheet" href="src/plugins/leaflet-mapkey/L.Icon.Mapkey.css">
+        <link rel="stylesheet" href="src/plugins/MarkerCluster.css">
+        <link rel="stylesheet" href="src/plugins/MarkerCluster.Default.css">
+        <link rel="stylesheet" href="src/jquery-ui.min.css">
+        <link rel="stylesheet" href="src/plugins/leaflet-legend.css">
+        
+        <script src="src/leaflet-src.js"></script>
+        <script src="src/jquery-3.2.0.min.js"></script>
+        <script src="src/plugins/L.Control.MousePosition.js"></script>
+        <script src="src/plugins/L.Control.Sidebar.js"></script>
+        <script src="src/plugins/Leaflet.PolylineMeasure.js"></script>
+        <script src="src/plugins/easy-button.js"></script>
+        <script src="src/plugins/leaflet-providers.js"></script>
+        <script src="src/plugins/leaflet-styleeditor/javascript/Leaflet.StyleEditor.js"></script>
+        <script src="src/plugins/leaflet-styleeditor/javascript/Leaflet.StyleForms.js"></script>
+        <script src="src/plugins/leaflet.ajax.min.js"></script>
+        <script src="src/plugins/leaflet.sprite.js"></script>
+        <script src="src/plugins/leaflet.awesome-markers.min.js"></script>
+        <script src="src/plugins/leaflet-mapkey/L.Icon.Mapkey.js"></script>
+        <script src="src/plugins/leaflet.markercluster.js"></script>
+        <script src="src/plugins/leaflet.geometryutil.js"></script>
+        <script src="src/jquery-ui.min.js"></script>
+        <script src="src/turf.min.js"></script>
+        <script src="src/plugins/leaflet-legend.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@turf/turf@5/turf.min.js"></script>
+        <script src=https://cdnjs.cloudflare.com/ajax/libs/mathjs/5.1.1/math.js></script>
+        
+        <style>
+            #header{
+                height:60px;
+                background-color:darkgoldenrod;
+            }
+            #mapdiv{
+                height:700px;
+                background-color:salmon;
+            }
+            #side_panel{
+                height:700px;
+                background-color:beige;
+            }
+            #footer{
+                height: 85px;
+                background-color:darkgrey;
+            }
+            #afterfooter{
+                height: 130px;
+                background-color:rgba(255, 99, 71, 0.5);
+                text-align:start;
+                
+            }
+            .attraction{
+                margin-bottom:5px;
+            }
+            /* The Modal (background) */
+            .modal{
+                z-index:1000; /*sit on top*/
+                width:100%; /*full width*/
+                height:100%; /*full height*/
+                display:none; /*hidden by default*/
+                background-color: rgba(0,0,0,0.4); /*black with opacity*/
+            }
+            /*Modal content */
+            .modal-content{
+                padding:20px;
+                background-color: tan;
+                margin-top:10%;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="header" class="col-md-12">
+            
+            <h1 class="text-center">Corona India Analyzer</h1>
+        </div>
+        <div id="side_panel" class="col-md-3">
+            <h1 class="text-center">Corona India GIS</h1>
+            <h5 class="text-center" style="color:red"><u>Current CoVID-19 Status of India</u></h5>
+            <h5 id="tc" class="text-center"></h5>
+            <h5 id="ta" class="text-center"></h5>
+            <h5 id="tr" class="text-center"></h5>
+            <h5 id="td" class="text-center"></h5><br>
+            <div id="divFilterProject" class="col-xs-12">
+                <div id="filter" class="col-xs-8">
+                    <input type='radio' name='fltProject' value='state' checked><b>Corona by States</b><br>
+                    <input type='radio' name='fltProject' value='district'><b>Corona by Districts</b><br>
+                </div><br><br><br>
+                            
+                <div id="legend1">
+                    <h4 id="l1">Active Cases Statewise(Current)</h4>
+                    <svg height="80" width="100%">
+                        <rect x="10" y="5" width="30" height="20" style="stroke-width:2; stroke:green; fill:green; fill-opacity:1;"/>
+                        <text x="50" y="20" style="font-family:sans-serif; font-size:16px;">0 - 50</text>
+                        <rect x="10" y="35" width="30" height="20" style="stroke-width:2; stroke:yellow; fill:yellow; fill-opacity:1;"/>
+                        <text x="50" y="50" style="font-family:sans-serif; font-size:16px;">51 - 500</text>
+                        <rect x="10" y="65" width="30" height="20" style="stroke-width:2; stroke:red; fill:red; fill-opacity:1;"/>
+                        <text x="50" y="80" style="font-family:sans-serif; font-size:16px;">> 500</text>
+                    </svg>
+                </div>
+                <div id="legend2">
+                    <h4 id="l2">Active Cases Districtwise(Current)</h4>
+                    <svg height="80" width="100%">
+                        <rect x="10" y="5" width="30" height="20" style="stroke-width:2; stroke:green; fill:green; fill-opacity:1;"/>
+                        <text x="50" y="20" style="font-family:sans-serif; font-size:16px;">0 - 10 (Relief in Lockdown)</text>
+                        <rect x="10" y="35" width="30" height="20" style="stroke-width:2; stroke:yellow; fill:yellow; fill-opacity:1;"/>
+                        <text x="50" y="50" style="font-family:sans-serif; font-size:16px;">11 - 50 (Partial Lockdown)</text>
+                        <rect x="10" y="65" width="30" height="20" style="stroke-width:2; stroke:red; fill:red; fill-opacity:1;"/>
+                        <text x="50" y="80" style="font-family:sans-serif; font-size:16px;">> 50 (Total Lockdown)</text>
+                    </svg>
+                    
+                </div>
+                <div>
+                    <h5 style="color:navy">To check the status of individual division point to the respective division on the map of India.</h5>
+                    <button id='btnForecast' class='btn btn-primary btn-block'>Forecast Lockdown Status</button>
+                    <div id="datefilter" class="col-xs-14">
+                        <h5><b>Note:</b>Forecasts are based solely on the mathematical assumptions. We do not take the responsibility for any discrepancy.</h5>
+                        <h4 class="test-center">Predict Lockdown Status on:</h4>
+                        <label>Date:</label>
+                        <input id='futuredate' type='date' name='future'>
+                        <button id='btnSubmit'>Submit</button>
+                        <h5 id="warning" style="color:red"></h5>
+                    </div>
+                </div>
+                
+            </div>
+            
+            
+            <div id="zoomButtons"></div>          
+        </div>
+        
+        <div id="mapdiv" class="col-md-9"></div>
+        <div id="footer" class="col-md-12">
+            <h4 id="map-coords" class="text-center">Latitude: 22.90 Longitude: 77.62 Zoom Level: 4</h4>
+            <h4 class="text-center">&copy;2020 GIS Lab, <a href="https://www.bits-pilani.ac.in">BITS Pilani, Rajasthan</a></h4>
+            <h5><marquee>This site is designed and developed by <b>Dr. Gaurav Kumar</b>, Research Associate, BITS Pilani under the supervision of <b>Dr. Rajiv Gupta</b>, Senior Professor, Department of Civil Engineering, BITS Pilani. This work was impossible without Covid-19 Data sources from <a href="https://github.com/amodm/api-covid19-in">Data Source 1</a> and <a href="https://api.covid19india.org/">Data Source 2</a>. Acknowledgements to the supporting hands by <b>Dr. Harish Puppala, Akshay Kumar, and Farhan Md. Khan.</b></marquee></h5>
+        </div>
+        
+        <div id="afterfooter" class="col-md-12" style="color:darkviolet">        
+            
+            <h5><b>The legends used to present the status of lockdown are just suggestive with respect to the number of cases at present or predicted in near future.</b></h5>
+            <h5><b>The Forecasting method applied to predict the cases in future is generalized recursive moving average method of forecasting where number of cases for the last 11 days are used to forecast further.</b></h5>
+            <h5><b>Forecasts are generated for the number of confirmed, recovered, and deceased cases, whereas active cases are taken as the difference between the forecasted confirmed and the total of recovered and deceased cases.</b></h5>
+            <h5><b>For any queries and feedback, kindly drop a mail at <u>gauravrajson@gmail.com</u></b></h5>
+                
+        </div>
+        
+        
+        
+        <script>
+            var mymap = L.map('mapdiv');
+            mymap.setView([22.90, 77.62], 4);
+            
+            var backgroundLayer = L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png');
+            mymap.addLayer(backgroundLayer);
+            
+            
+            
+            
+            var lyrStates;
+            var jsnStateCorona;
+            var gjsnStateCorona;
+            var lyrDistricts;
+            var lyrProStates;
+            var lyrProDistricts;
+//            $("#legend1").hide();
+            $("#legend2").hide();
+            $("#datefilter").hide();
+            refreshCorona();
+ 
+                
+            
+            mymap.on('mousemove',function(e){
+                var str = "Latitude: "+e.latlng.lat.toFixed(5)+"Longitude: "+e.latlng.lng.toFixed(5)+"Zoom level: "+mymap.getZoom();
+                $("#map-coords").html(str);
+            });
+            
+            function refreshCorona(){
+                if(lyrStates){
+                    mymap.removeLayer(lyrStates);
+                }
+                if(lyrDistricts){
+                    mymap.removeLayer(lyrDistricts);
+                }
+                if(lyrProStates){
+                    mymap.removeLayer(lyrProStates);
+                }
+                if(lyrProDistricts){
+                    mymap.removeLayer(lyrProDistricts);
+                }
+                var lyr = $("input[name=fltProject]:checked").val();
+                if (lyr == 'state'){
+                    $("#legend2").hide();
+                    $.getJSON('https://api.rootnet.in/covid19-in/unofficial/covid19india.org/statewise', function(data) {
+                    //data is the JSON string
+                        jsnStateCorona = data;
+                        $("#tc").html("Total Confirmed: <b>"+jsnStateCorona.data.total.confirmed+"</b>");
+                        $("#ta").html("Total Active:    <b>"+jsnStateCorona.data.total.active+"</b>");
+                        $("#tr").html("Total Recovered: <b>"+jsnStateCorona.data.total.recovered+"</b>");
+                        $("#td").html("Total Deceased:  <b>"+jsnStateCorona.data.total.deaths+"</b>");
+                        $.getJSON('data/states.geojson', function(data) {
+                        //data is the JSON string
+                            gjsnStateCorona = data; 
+                            
+                            for (var i=0;i<gjsnStateCorona.features.length;i++){
+                                for (var j=0; j<jsnStateCorona.data.statewise.length; j++){
+                                    if (gjsnStateCorona.features[i].properties.NAME_1 == jsnStateCorona.data.statewise[j].state){
+                                        gjsnStateCorona.features[i].properties.Confirmed = jsnStateCorona.data.statewise[j].confirmed;
+                                        gjsnStateCorona.features[i].properties.Recovered = jsnStateCorona.data.statewise[j].recovered;
+                                        gjsnStateCorona.features[i].properties.Deaths = jsnStateCorona.data.statewise[j].deaths;
+                                        gjsnStateCorona.features[i].properties.Active = jsnStateCorona.data.statewise[j].active;
+                                    }
+                                }    
+                            }
+                            console.log(jsnStateCorona.data.statewise.length);
+                            console.log(gjsnStateCorona.features.length);
+                            lyrStates = L.geoJSON(gjsnStateCorona, {style:styleStates, onEachFeature:processStates}).addTo(mymap);
+                            $("#legend1").show();
+                        
+                        });
+                        
+                    });      
+                }else{
+                    $("#legend1").hide();
+                    $.getJSON('https://api.covid19india.org/v2/state_district_wise.json', function(data) {
+                    //data is the JSON string
+                        jsnDistrictCorona = data;
+                        $.getJSON('data/districts.geojson', function(data) {
+                        //data is the JSON string
+                            gjsnDistrictCorona = data;
+                            for (var i=0;i<gjsnDistrictCorona.features.length;i++){
+                                for (var j=0; j<jsnDistrictCorona.length;j++){
+                                    if (gjsnDistrictCorona.features[i].properties.State == jsnDistrictCorona[j].state){
+                                        for (var k=0; k<jsnDistrictCorona[j].districtData.length; k++){
+                                            if (gjsnDistrictCorona.features[i].properties.District == jsnDistrictCorona[j].districtData[k].district){
+                                                gjsnDistrictCorona.features[i].properties.Confirmed = jsnDistrictCorona[j].districtData[k].confirmed;
+                                                gjsnDistrictCorona.features[i].properties.Recovered = jsnDistrictCorona[j].districtData[k].recovered;
+                                                gjsnDistrictCorona.features[i].properties.Deaths = jsnDistrictCorona[j].districtData[k].deceased;
+                                                gjsnDistrictCorona.features[i].properties.Active = jsnDistrictCorona[j].districtData[k].active;
+                                            }
+                                        }
+                                        
+                                    }
+                                    
+                                }    
+                            }
+                            for (var i=0; i<gjsnDistrictCorona.features.length;i++){
+                                if (gjsnDistrictCorona.features[i].properties.Confirmed == undefined){
+                                    gjsnDistrictCorona.features[i].properties.Confirmed = 0;
+                                }
+                                if (gjsnDistrictCorona.features[i].properties.Recovered == undefined){
+                                    gjsnDistrictCorona.features[i].properties.Recovered = 0;
+                                }
+                                if (gjsnDistrictCorona.features[i].properties.Deaths == undefined){
+                                    gjsnDistrictCorona.features[i].properties.Deaths = 0;
+                                }
+                                if (gjsnDistrictCorona.features[i].properties.Active == undefined){
+                                    gjsnDistrictCorona.features[i].properties.Active = 0;
+                                }
+                            }
+                            console.log(jsnDistrictCorona[1].districtData[0]);
+                            console.log(gjsnDistrictCorona);
+                            lyrDistricts = L.geoJSON(gjsnDistrictCorona, {style:styleDistricts, onEachFeature:processDistricts}).addTo(mymap);
+                            $("#legend2").show();
+                        });
+                    });                
+                }  
+            }
+            
+            
+            $("#filter").change(function(){
+               refreshCorona(); 
+            });
+            
+            
+            
+//            $("#btnClosest").click(function(){
+//                $.ajax({
+//                    url:'closest_attractions.php',
+//                    type:'POST',
+//                    data:{
+//                        latitude:$("#latitude").val(),
+//                        longitude:$("#longitude").val()
+//                    },
+//                    success:function(response){
+//                        $("#form").hide();
+//                        $("#table").show();
+//                        $("#tableData").html(response);
+//                    }
+//                });
+//            });
+            
+            function processStates(json, lyr){
+                var att = json.properties;
+                lyr.bindTooltip("<h4>State: "+att.NAME_1+"</h4>Confirmed: "+att.Confirmed+"<br>Active: "+att.Active+"<br>Recovered: "+att.Recovered+"<br>Deceased: "+att.Deaths);
+            }
+            
+            function processDistricts(json, lyr){
+                var att = json.properties;
+                lyr.bindTooltip("<h4>District: "+att.District+"</h4><b>State: "+att.State+"</b><br>Confirmed: "+att.Confirmed+"<br>Active: "+att.Active+"<br>Recovered: "+att.Recovered+"<br>Deceased: "+att.Deaths);
+            }
+            
+            function styleStates(json) {
+                var att = json.properties.Active;
+                switch (true) {
+                    case ((att>-10000) && (att<=50)):
+                        return {color:'black', weight:1,fillColor:'green',fillOpacity:0.5};
+                        break;
+                    case ((att>50) && (att<=500)):
+                        return {color:'black', weight:1,fillColor:'yellow',fillOpacity:0.5};
+                        break;
+//                    case ((att>0.4) && (att<=0.6)):
+//                        return {color:'darkgreen',fillColor:'darkgreen',fillOpacity:0.5};
+//                        break;
+//                    case ((att>0.6) && (att<=0.8)):
+//                        return {color:'red',fillColor:'red',fillOpacity:0.5};
+//                        break
+//                    case ((att>0.8) && (att<=1.0)):
+//                        return {color:'aqua',fillColor:'aqua',fillOpacity:0.5};
+//                        break;
+                    default:
+                        return {color:'black', weight:1,fillColor:'red',fillOpacity:0.5};
+                }
+            }
+            
+            function styleDistricts(json) {
+                var att = json.properties.Active;
+                switch (true) {
+                    case ((att>-10000) && (att<=10)):
+                        return {color:'black', weight:1, fillColor:'green',fillOpacity:0.5};
+                        break;
+                    case ((att>10) && (att<=50)):
+                        return {color:'black', weight:1,fillColor:'yellow',fillOpacity:0.5};
+                        break;
+//                    case ((att>0.4) && (att<=0.6)):
+//                        return {color:'darkgreen',fillColor:'darkgreen',fillOpacity:0.5};
+//                        break;
+//                    case ((att>0.6) && (att<=0.8)):
+//                        return {color:'red',fillColor:'red',fillOpacity:0.5};
+//                        break
+//                    case ((att>0.8) && (att<=1.0)):
+//                        return {color:'aqua',fillColor:'aqua',fillOpacity:0.5};
+//                        break;
+                    default:
+                        return {color:'black', weight:1,fillColor:'red',fillOpacity:0.5};
+                }
+            }
+            
+            $("#btnForecast").click(function(){
+               if($("#btnForecast").html()=="Forecast Lockdown Status"){
+                  $("#datefilter").show();   
+                  $("#btnForecast").html("Cancel Forecast");   
+               }else{
+                  $("#datefilter").hide();
+                  $("#l1").html("Active Cases Statewise(Current)");
+                  $("#l2").html("Active Cases Districtwise(Current)");   
+                  $("#btnForecast").html("Forecast Lockdown Status");
+                  
+                  refreshCorona();
+               }           
+            });
+            
+            $("#btnSubmit").click(function(){   
+                
+                projectCorona(); 
+                
+            });
+            
+            function projectCorona(){
+                var at = $("#futuredate").val().split("-").reverse();     
+                var x = new Date(at[2], at[1] -1, at[0]);
+                var y = new Date();
+                var t = Math.ceil((x-y)/(1000*3600*24))+11;
+                console.log(t);
+                if ((t<43) && (t>11)){
+                    $("#warning").html(" ");
+                    if(lyrProStates){
+                    mymap.removeLayer(lyrProStates);
+                }
+                if(lyrProDistricts){
+                    mymap.removeLayer(lyrProDistricts);
+                }
+//                var at = $("#futuredate").val().split("-").reverse();     
+//                var x = new Date(at[2], at[1] -1, at[0]);
+//                var y = new Date();
+//                var t = Math.ceil((x-y)/(1000*3600*24))+11;
+//                console.log(t);
+                var lyr = $("input[name=fltProject]:checked").val();
+                console.log(lyr);
+                if (lyr == 'state'){
+                    
+                    pjsnStateCorona = lyrStates.toGeoJSON();
+                    console.log(pjsnStateCorona);             
+                     
+                    var a = math.matrix([[0,1,1,1,0,1,0,1,0,1,0],[1,1,-0.7697,0.3522,0.7635,0.1073,0.6111,-0.4171,0.6583,-0.4771,0.311],[2,1,0.5924,-0.4589,0.5378,-0.3619,0.1311,-0.2593,-0.5492,0.1309,-0.2967],[3,1,-0.456,-0.5722,-0.161,-0.1189,-0.2071,0.4697,0.0584,0.0298,0.1823],[4,1,0.351,-0.0786,-0.4935,0.1138,-0.0949,-0.2343,0.2848,-0.0709,-0.0777],[5,1,-0.2702,0.3491,-0.2339,0.0702,0.0593,-0.0898,-0.2731,0.058,0.015],[6,1,0.2079,0.3015,0.1842,-0.0287,0.0493,0.2172,0.0548,-0.0323,0.0109],[7,1,-0.16,-0.0344,0.2951,-0.0332,-0.0123,-0.1267,0.1201,0.012,-0.0152],[8,1,0.1232,-0.2374,0.0776,0.0039,-0.0216,-0.0262,-0.1335,-0.001,0.011],[9,1,-0.0948,-0.1429,-0.1539,0.0136,0.0001,0.0988,0.0384,-0.0029,-0.0056],[10,1,0.073,0.0672,-0.1633,0.0014,0.0083,-0.0665,0.049,0.0031,0.0017]]);
+
+                    var ainv = math.inv(a);
+
+                    $.getJSON('https://api.rootnet.in/covid19-in/unofficial/covid19india.org/statewise/history', function(data) {
+                    //data is the JSON string
+                        hjsnStateCorona = data;
+                        console.log(hjsnStateCorona);
+                        
+                        for (var i=0;i<pjsnStateCorona.features.length;i++){
+                            var x1 = [];
+                            var x2 = [];
+                            var x3 = [];
+                            var x4 = [];
+                            for (var j=hjsnStateCorona.data.history.length-11; j<hjsnStateCorona.data.history.length; j++){
+                                for (var k=0; k<hjsnStateCorona.data.history[j].statewise.length; k++){
+                                    if (pjsnStateCorona.features[i].properties.NAME_1 == hjsnStateCorona.data.history[j].statewise[k].state){
+                                        x1.push(hjsnStateCorona.data.history[j].statewise[k].confirmed);
+                                        x2.push(hjsnStateCorona.data.history[j].statewise[k].recovered);
+                                        x3.push(hjsnStateCorona.data.history[j].statewise[k].deaths);
+                                        x4.push(hjsnStateCorona.data.history[j].statewise[k].active);
+                                    }
+                                }
+                            }                        
+                            var z1 = math.matrix(x1);
+                            var z2 = math.matrix(x2);
+                            var z3 = math.matrix(x3);
+                            var z4 = math.matrix(x4);
+
+                            var u1 = math.transpose(z1);
+                            var u2 = math.transpose(z2);
+                            var u3 = math.transpose(z3);
+                            var u4 = math.transpose(z4);
+
+                            var y1 = math.multiply(ainv, u1);
+                            var y2 = math.multiply(ainv, u2);
+                            var y3 = math.multiply(ainv, u3);
+                            var y4 = math.multiply(ainv, u4);
+
+                            aa1 = y1.valueOf();
+                            aa2 = y2.valueOf();
+                            aa3 = y3.valueOf();
+                            aa4 = y4.valueOf();
+
+                            pjsnStateCorona.features[i].properties.Confirmed = Math.ceil(aa1[0]*t+aa1[1]+aa1[2]*(-0.7697)**t+(0.8408)**t*(aa1[3]*Math.cos(1.1386*t)+aa1[4]*Math.sin(1.1386*t))+(0.6204)**t*(aa1[5]*Math.cos(1.3970*t)+aa1[6]*Math.sin(1.3970*t))+(0.7793)**t*(aa1[7]*Math.cos(2.1356*t)+aa1[8]*Math.sin(2.1356*t))+(0.5696)**t*(aa1[9]*Math.cos(2.5639*t)+aa1[10]*Math.sin(2.5639*t)));
+
+                            pjsnStateCorona.features[i].properties.Recovered = Math.ceil(aa2[0]*t+aa2[1]+aa2[2]*(-0.7697)**t+(0.8408)**t*(aa2[3]*Math.cos(1.1386*t)+aa2[4]*Math.sin(1.1386*t))+(0.6204)**t*(aa2[5]*Math.cos(1.3970*t)+aa2[6]*Math.sin(1.3970*t))+(0.7793)**t*(aa2[7]*Math.cos(2.1356*t)+aa2[8]*Math.sin(2.1356*t))+(0.5696)**t*(aa2[9]*Math.cos(2.5639*t)+aa2[10]*Math.sin(2.5639*t)));
+
+//                            pjsnStateCorona.features[i].properties.Active = Math.ceil(aa4[0]*t+aa4[1]+aa4[2]*(-0.7697)**t+(0.8408)**t*(aa4[3]*Math.cos(1.1386*t)+aa4[4]*Math.sin(1.1386*t))+(0.6204)**t*(aa4[5]*Math.cos(1.3970*t)+aa4[6]*Math.sin(1.3970*t))+(0.7793)**t*(aa4[7]*Math.cos(2.1356*t)+aa4[8]*Math.sin(2.1356*t))+(0.5696)**t*(aa4[9]*Math.cos(2.5639*t)+aa4[10]*Math.sin(2.5639*t)));
+                            
+                            pjsnStateCorona.features[i].properties.Deaths = Math.ceil(aa3[0]*t+aa3[1]+aa3[2]*(-0.7697)**t+(0.8408)**t*(aa3[3]*Math.cos(1.1386*t)+aa3[4]*Math.sin(1.1386*t))+(0.6204)**t*(aa3[5]*Math.cos(1.3970*t)+aa3[6]*Math.sin(1.3970*t))+(0.7793)**t*(aa3[7]*Math.cos(2.1356*t)+aa3[8]*Math.sin(2.1356*t))+(0.5696)**t*(aa3[9]*Math.cos(2.5639*t)+aa3[10]*Math.sin(2.5639*t)));
+                            
+                            pjsnStateCorona.features[i].properties.Active = pjsnStateCorona.features[i].properties.Confirmed-(pjsnStateCorona.features[i].properties.Recovered+pjsnStateCorona.features[i].properties.Deaths);
+                                
+//                                Math.ceil(aa3[0]*t+aa3[1]+aa3[2]*(-0.7697)**t+(0.8408)**t*(aa3[3]*Math.cos(1.1386*t)+aa3[4]*Math.sin(1.1386*t))+(0.6204)**t*(aa3[5]*Math.cos(1.3970*t)+aa3[6]*Math.sin(1.3970*t))+(0.7793)**t*(aa3[7]*Math.cos(2.1356*t)+aa3[8]*Math.sin(2.1356*t))+(0.5696)**t*(aa3[9]*Math.cos(2.5639*t)+aa3[10]*Math.sin(2.5639*t)));
+                        
+                        }
+                        for (var i=0; i<pjsnStateCorona.features.length;i++){
+                            if ((isNaN(pjsnStateCorona.features[i].properties.Confirmed)) || (pjsnStateCorona.features[i].properties.Confirmed<0)){
+                                pjsnStateCorona.features[i].properties.Confirmed = 0;
+                            }
+                            if ((isNaN(pjsnStateCorona.features[i].properties.Recovered)) || (pjsnStateCorona.features[i].properties.Recovered<0)){
+                                pjsnStateCorona.features[i].properties.Recovered = 0;
+                            }
+                            if ((isNaN(pjsnStateCorona.features[i].properties.Deaths)) || (pjsnStateCorona.features[i].properties.Deaths<0)){
+                                pjsnStateCorona.features[i].properties.Deaths = 0;
+                            }
+                            if ((isNaN(pjsnStateCorona.features[i].properties.Active)) || (pjsnStateCorona.features[i].properties.Active<0)){
+                                pjsnStateCorona.features[i].properties.Active = 0;
+                            }
+                        }
+                        for (var i=0; i<pjsnStateCorona.features.length;i++){
+                            if (pjsnStateCorona.features[i].properties.Recovered>pjsnStateCorona.features[i].properties.Confirmed){
+                                pjsnStateCorona.features[i].properties.Recovered = pjsnStateCorona.features[i].properties.Confirmed-pjsnStateCorona.features[i].properties.Deaths;
+                                pjsnStateCorona.features[i].properties.Active = 0;
+                            }
+                        }
+
+                        mymap.removeLayer(lyrStates);
+                        lyrProStates = L.geoJSON(pjsnStateCorona, {style:styleStates, onEachFeature:processStates}).addTo(mymap);
+                        $("#l1").html("Active Cases Statewise ("+at+")");
+                        
+                    });      
+                }else{
+                    $("#legend1").hide();
+                    
+                    pjsnStateCorona = lyrStates.toGeoJSON();
+                    pjsnDistrictCorona = lyrDistricts.toGeoJSON();
+                         
+                     
+                    var a = math.matrix([[0,1,1,1,0,1,0,1,0,1,0],[1,1,-0.7697,0.3522,0.7635,0.1073,0.6111,-0.4171,0.6583,-0.4771,0.311],[2,1,0.5924,-0.4589,0.5378,-0.3619,0.1311,-0.2593,-0.5492,0.1309,-0.2967],[3,1,-0.456,-0.5722,-0.161,-0.1189,-0.2071,0.4697,0.0584,0.0298,0.1823],[4,1,0.351,-0.0786,-0.4935,0.1138,-0.0949,-0.2343,0.2848,-0.0709,-0.0777],[5,1,-0.2702,0.3491,-0.2339,0.0702,0.0593,-0.0898,-0.2731,0.058,0.015],[6,1,0.2079,0.3015,0.1842,-0.0287,0.0493,0.2172,0.0548,-0.0323,0.0109],[7,1,-0.16,-0.0344,0.2951,-0.0332,-0.0123,-0.1267,0.1201,0.012,-0.0152],[8,1,0.1232,-0.2374,0.0776,0.0039,-0.0216,-0.0262,-0.1335,-0.001,0.011],[9,1,-0.0948,-0.1429,-0.1539,0.0136,0.0001,0.0988,0.0384,-0.0029,-0.0056],[10,1,0.073,0.0672,-0.1633,0.0014,0.0083,-0.0665,0.049,0.0031,0.0017]]);
+
+                    var ainv = math.inv(a);
+
+                    $.getJSON('https://api.rootnet.in/covid19-in/unofficial/covid19india.org/statewise/history', function(data) {
+                    //data is the JSON string
+                        hjsnStateCorona = data;
+                        console.log(hjsnStateCorona);
+                        
+                        for (var i=0;i<pjsnStateCorona.features.length;i++){
+                            var x1 = [];
+                            var x2 = [];
+                            var x3 = [];
+                            var x4 = [];
+                            for (var j=hjsnStateCorona.data.history.length-11; j<hjsnStateCorona.data.history.length; j++){
+                                for (var k=0; k<hjsnStateCorona.data.history[j].statewise.length; k++){
+                                    if (pjsnStateCorona.features[i].properties.NAME_1 == hjsnStateCorona.data.history[j].statewise[k].state){
+                                        x1.push(hjsnStateCorona.data.history[j].statewise[k].confirmed);
+                                        x2.push(hjsnStateCorona.data.history[j].statewise[k].recovered);
+                                        x3.push(hjsnStateCorona.data.history[j].statewise[k].deaths);
+                                        x4.push(hjsnStateCorona.data.history[j].statewise[k].active);
+                                    }
+                                }
+                            }                        
+                            var z1 = math.matrix(x1);
+                            var z2 = math.matrix(x2);
+                            var z3 = math.matrix(x3);
+                            var z4 = math.matrix(x4);
+
+                            var u1 = math.transpose(z1);
+                            var u2 = math.transpose(z2);
+                            var u3 = math.transpose(z3);
+                            var u4 = math.transpose(z4);
+
+                            var y1 = math.multiply(ainv, u1);
+                            var y2 = math.multiply(ainv, u2);
+                            var y3 = math.multiply(ainv, u3);
+                            var y4 = math.multiply(ainv, u4);
+
+                            aa1 = y1.valueOf();
+                            aa2 = y2.valueOf();
+                            aa3 = y3.valueOf();
+                            aa4 = y4.valueOf();
+
+                            pjsnStateCorona.features[i].properties.Confirmed2 = Math.ceil(aa1[0]*t+aa1[1]+aa1[2]*(-0.7697)**t+(0.8408)**t*(aa1[3]*Math.cos(1.1386*t)+aa1[4]*Math.sin(1.1386*t))+(0.6204)**t*(aa1[5]*Math.cos(1.3970*t)+aa1[6]*Math.sin(1.3970*t))+(0.7793)**t*(aa1[7]*Math.cos(2.1356*t)+aa1[8]*Math.sin(2.1356*t))+(0.5696)**t*(aa1[9]*Math.cos(2.5639*t)+aa1[10]*Math.sin(2.5639*t)));
+
+                            pjsnStateCorona.features[i].properties.Recovered2 = Math.ceil(aa2[0]*t+aa2[1]+aa2[2]*(-0.7697)**t+(0.8408)**t*(aa2[3]*Math.cos(1.1386*t)+aa2[4]*Math.sin(1.1386*t))+(0.6204)**t*(aa2[5]*Math.cos(1.3970*t)+aa2[6]*Math.sin(1.3970*t))+(0.7793)**t*(aa2[7]*Math.cos(2.1356*t)+aa2[8]*Math.sin(2.1356*t))+(0.5696)**t*(aa2[9]*Math.cos(2.5639*t)+aa2[10]*Math.sin(2.5639*t)));
+
+                            pjsnStateCorona.features[i].properties.Deaths2 = Math.ceil(aa3[0]*t+aa3[1]+aa3[2]*(-0.7697)**t+(0.8408)**t*(aa3[3]*Math.cos(1.1386*t)+aa3[4]*Math.sin(1.1386*t))+(0.6204)**t*(aa3[5]*Math.cos(1.3970*t)+aa3[6]*Math.sin(1.3970*t))+(0.7793)**t*(aa3[7]*Math.cos(2.1356*t)+aa3[8]*Math.sin(2.1356*t))+(0.5696)**t*(aa3[9]*Math.cos(2.5639*t)+aa3[10]*Math.sin(2.5639*t)));
+
+                            pjsnStateCorona.features[i].properties.Active2 = pjsnStateCorona.features[i].properties.Confirmed2-(pjsnStateCorona.features[i].properties.Recovered2+pjsnStateCorona.features[i].properties.Deaths2); 
+                                
+//                                Math.ceil(aa4[0]*t+aa4[1]+aa4[2]*(-0.7697)**t+(0.8408)**t*(aa4[3]*Math.cos(1.1386*t)+aa4[4]*Math.sin(1.1386*t))+(0.6204)**t*(aa4[5]*Math.cos(1.3970*t)+aa4[6]*Math.sin(1.3970*t))+(0.7793)**t*(aa4[7]*Math.cos(2.1356*t)+aa4[8]*Math.sin(2.1356*t))+(0.5696)**t*(aa4[9]*Math.cos(2.5639*t)+aa4[10]*Math.sin(2.5639*t)));
+                        
+                        }
+                        for (var i=0; i<pjsnDistrictCorona.features.length; i++){
+                            for (var j=0; j<pjsnStateCorona.features.length; j++){
+                                if(pjsnDistrictCorona.features[i].properties.State == pjsnStateCorona.features[j].properties.NAME_1){
+                                    pjsnDistrictCorona.features[i].properties.Confirmed = Math.ceil((pjsnDistrictCorona.features[i].properties.Confirmed*pjsnStateCorona.features[j].properties.Confirmed2)/pjsnStateCorona.features[j].properties.Confirmed);
+                                    
+                                    pjsnDistrictCorona.features[i].properties.Recovered = Math.ceil((pjsnDistrictCorona.features[i].properties.Recovered*pjsnStateCorona.features[j].properties.Recovered2)/pjsnStateCorona.features[j].properties.Recovered);
+                                    
+                                    pjsnDistrictCorona.features[i].properties.Deaths = Math.ceil((pjsnDistrictCorona.features[i].properties.Deaths*pjsnStateCorona.features[j].properties.Deaths2)/pjsnStateCorona.features[j].properties.Deaths);
+                                    
+                                    pjsnDistrictCorona.features[i].properties.Active = pjsnDistrictCorona.features[i].properties.Confirmed-(pjsnDistrictCorona.features[i].properties.Recovered+pjsnDistrictCorona.features[i].properties.Deaths);
+                                    
+//                                    pjsnDistrictCorona.features[i].properties.Deaths = pjsnDistrictCorona.features[i].properties.Confirmed-(pjsnDistrictCorona.features[i].properties.Recovered+pjsnDistrictCorona.features[i].properties.Active);
+//                                    
+//                                    pjsnDistrictCorona.features[i].properties.Active = Math.ceil((pjsnDistrictCorona.features[i].properties.Active*pjsnStateCorona.features[j].properties.Active2)/pjsnStateCorona.features[j].properties.Active);
+//                                    Math.ceil((pjsnDistrictCorona.features[i].properties.Deaths*pjsnStateCorona.features[j].properties.Deaths2)/pjsnStateCorona.features[j].properties.Deaths);
+                                 
+                                }
+                            }
+                        }
+                        for (var i=0; i<pjsnDistrictCorona.features.length;i++){
+                            if ((isNaN(pjsnDistrictCorona.features[i].properties.Confirmed)) || (pjsnDistrictCorona.features[i].properties.Confirmed<0)){
+                                pjsnDistrictCorona.features[i].properties.Confirmed = 0;
+                            }
+                            if ((isNaN(pjsnDistrictCorona.features[i].properties.Recovered)) || (pjsnDistrictCorona.features[i].properties.Recovered<0)){
+                                pjsnDistrictCorona.features[i].properties.Recovered = 0;
+                            }
+                            if ((isNaN(pjsnDistrictCorona.features[i].properties.Deaths)) || (pjsnDistrictCorona.features[i].properties.Deaths<0)){
+                                pjsnDistrictCorona.features[i].properties.Deaths = 0;
+                            }
+                            if ((isNaN(pjsnDistrictCorona.features[i].properties.Active)) || (pjsnDistrictCorona.features[i].properties.Active<0)){
+                                pjsnDistrictCorona.features[i].properties.Active = 0;
+                            }
+                        }
+                        for (var i=0; i<pjsnDistrictCorona.features.length;i++){
+                            if (pjsnDistrictCorona.features[i].properties.Recovered>pjsnDistrictCorona.features[i].properties.Confirmed){
+                                pjsnDistrictCorona.features[i].properties.Recovered = pjsnDistrictCorona.features[i].properties.Confirmed-pjsnDistrictCorona.features[i].properties.Deaths;
+                                pjsnDistrictCorona.features[i].properties.Active = 0;
+                            }
+                        }
+                        for (var i=0; i<pjsnDistrictCorona.features.length;i++){
+                            if (pjsnDistrictCorona.features[i].properties.Confirmed>pjsnDistrictCorona.features[i].properties.Recovered){
+                                pjsnDistrictCorona.features[i].properties.Active = pjsnDistrictCorona.features[i].properties.Confirmed-(pjsnDistrictCorona.features[i].properties.Recovered+pjsnDistrictCorona.features[i].properties.Deaths);
+
+                            }
+                        }
+                        
+
+                        
+                        console.log(pjsnDistrictCorona);
+                        mymap.removeLayer(lyrDistricts);
+                        lyrProDistricts = L.geoJSON(pjsnDistrictCorona, {style:styleDistricts, onEachFeature:processDistricts}).addTo(mymap);
+                        $("#l2").html("Active Cases Districtwise ("+at+")");
+                        $("#legend2").show();
+                        
+                    });       
+                }  
+                    
+                }else{
+                    refreshCorona();
+                    $("#warning").html("<b>Date out of range. Kindly select the dates ranging from tomorrow to the next 30 days</b>");
+                    
+                    
+                }
+                
+            }            
+            
+            
+            
+
+                                 
+        </script>
+    </body>
+</html>
